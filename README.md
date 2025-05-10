@@ -2,6 +2,12 @@
 
 A sophisticated book recommendation system that uses semantic search, emotional analysis, and category-based filtering to provide personalized book recommendations.
 
+## Author
+
+MOHAMMED MURSHID KK
+- 💼 LinkedIn: [https://www.linkedin.com/in/murshidkk/]
+- 🌐 Website: [https://murshidkk.info/]
+
 ## Features
 
 - 🔍 Semantic search using modern NLP techniques
@@ -16,8 +22,9 @@ A sophisticated book recommendation system that uses semantic search, emotional 
 
 ```
 .
-├── dashboard.py              # Gradio web interface
-├── api.py                   # FastAPI service
+├── main.py                   # Combined FastAPI and Gradio service
+├── dashboard.py              # Gradio web interface (legacy)
+├── api.py                    # FastAPI service (legacy)
 ├── data-exploration.ipynb    # Initial data analysis
 ├── text-classification.ipynb # Text classification implementation
 ├── sentiment-analysis.ipynb  # Emotional analysis of book descriptions
@@ -56,38 +63,31 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Running the Gradio Interface
+### Running the Combined Service
 
 ```bash
-python dashboard.py
+python main.py
 ```
 
-### Running the API Service
+This will start both the API and the Gradio interface. You can access:
+- API Documentation: `http://localhost:8000/docs`
+- Gradio Interface: `http://localhost:8000/dashboard`
+- API Root: `http://localhost:8000/`
 
-```bash
-python api.py
-```
+### API Endpoints
 
-The API will be available at `http://localhost:8000`
+1. **GET /** - Service Information
+   - Returns basic service information and available endpoints
 
-### API Documentation
-
-Once the API is running, visit `http://localhost:8000/docs` for interactive API documentation.
-
-#### Available Endpoints
-
-1. **GET /** - API Information
-   - Returns basic API information and available endpoints
-
-2. **GET /categories** - Get Categories
+2. **GET /api/categories** - Get Categories
    - Returns list of available book categories
    - Response: `{"categories": ["All", "Fiction", "Non-Fiction", ...]}`
 
-3. **GET /tones** - Get Emotional Tones
+3. **GET /api/tones** - Get Emotional Tones
    - Returns list of available emotional tones
    - Response: `{"tones": ["All", "Happy", "Surprising", "Angry", "Suspenseful", "Sad"]}`
 
-4. **POST /recommend** - Get Book Recommendations
+4. **POST /api/recommend** - Get Book Recommendations
    - Request Body:
      ```json
      {
@@ -122,34 +122,43 @@ Once the API is running, visit `http://localhost:8000/docs` for interactive API 
 
 ## Deployment
 
-### Backend Deployment Options
+### Render Deployment
 
-1. **Render**
-   - Free tier available
-   - Easy deployment with GitHub integration
-   - Automatic HTTPS
+1. Create a new Web Service on Render
+2. Connect your GitHub repository
+3. Configure the service:
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `python main.py`
+   - **Environment Variables**: Add any required environment variables
 
-2. **Railway**
-   - Free tier available
-   - Simple deployment process
-   - Good for small to medium applications
+The service will be available at:
+- API Documentation: `https://your-app.onrender.com/docs`
+- Gradio Interface: `https://your-app.onrender.com/dashboard`
+- API Root: `https://your-app.onrender.com/`
 
-3. **Heroku**
-   - Free tier available
-   - Extensive documentation
-   - Easy scaling options
+### Railway Deployment
 
-### Frontend Deployment Options
+1. Create a new project on Railway
+2. Connect your GitHub repository
+3. Configure the service:
+   - **Start Command**: `python main.py`
+   - Add any required environment variables
 
-1. **Vercel**
-   - Free tier available
-   - Excellent for React applications
-   - Automatic deployments
+### Frontend Deployment
+
+For the React frontend, you can deploy to:
+
+1. **Vercel** (Recommended)
+   - Connect your GitHub repository
+   - Set the build command: `npm run build`
+   - Set the output directory: `build`
+   - Add environment variables for API URL
 
 2. **Netlify**
-   - Free tier available
-   - Great for static sites
-   - Easy CI/CD integration
+   - Connect your GitHub repository
+   - Set the build command: `npm run build`
+   - Set the publish directory: `build`
+   - Add environment variables for API URL
 
 ## Contributing
 
@@ -170,9 +179,3 @@ Once the API is running, visit `http://localhost:8000/docs` for interactive API 
 - Gradio for the web interface
 - Chroma for vector storage
 - FastAPI for the API framework
-
-## Author
-
-MOHAMMED MURSHID KK
-- 💼 LinkedIn: [https://www.linkedin.com/in/murshidkk/]
-- 🌐 Website: [https://murshidkk.info/]
