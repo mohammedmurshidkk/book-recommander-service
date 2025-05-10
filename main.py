@@ -13,6 +13,8 @@ from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
 import time
+import os
+import gc
 
 # Load environment variables
 load_dotenv()
@@ -33,17 +35,56 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load and process data
-books = pd.read_csv("books_with_emotions.csv")
-books["large_thumbnail"] = books["thumbnail"] + "&fife=w800"
-books["large_thumbnail"] = np.where(books["large_thumbnail"].isna(), "sample-cover.png", books["large_thumbnail"])
+# Global variables for lazy loading
+_books = None
+_db_books = None
+_embedding = None
 
-raw_documents = TextLoader("tagged_descriptions.txt").load()
-text_splitter = CharacterTextSplitter(chunk_size=0, chunk_overlap=0, separator="\n")
-documents = text_splitter.split_documents(raw_documents)
+def get_books():
+    global _books
+    if _books is None:
+        # Load only necessary columns
+        _books = pd.read_csv("books_with_emotions.csv", usecols=[
+            'isbn13', 'title', 'authors', 'description', 'thumbnail', 
+            'simple_categories', 'joy', 'surprise', 'anger', 'fear', 'sadness'
+        ])
+        _books["large_thumbnail"] = _books["thumbnail"] + "&fife=w800"
+        _books["large_thumbnail"] = np.where(
+            _books["large_thumbnail"].isna(), 
+            "sample-cover.png", 
+            _books["large_thumbnail"]
+        )
+    return _books
 
-embedding = HuggingFaceEmbeddings(model_name='paraphrase-MiniLM-L6-v2')
-db_books = Chroma.from_documents(documents, embedding=embedding)
+def get_embedding():
+    global _embedding
+    if _embedding is None:
+        _embedding = HuggingFaceEmbeddings(model_name='paraphrase-MiniLM-L6-v2')
+    return _embedding
+
+def get_db():
+    global _db_books
+    if _db_books is None:
+        # Load documents in chunks
+        raw_documents = TextLoader("tagged_descriptions.txt").load()
+        text_splitter = CharacterTextSplitter(chunk_size=0, chunk_overlap=0, separator="\n")
+        documents = text_splitter.split_documents(raw_documents)
+        
+        # Create Chroma DB with persistence
+        persist_directory = "chroma_db"
+        if not os.path.exists(persist_directory):
+            _db_books = Chroma.from_documents(
+                documents, 
+                embedding=get_embedding(),
+                persist_directory=persist_directory
+            )
+            _db_books.persist()
+        else:
+            _db_books = Chroma(
+                persist_directory=persist_directory,
+                embedding_function=get_embedding()
+            )
+    return _db_books
 
 # Pydantic models for request/response
 class RecommendationRequest(BaseModel):
@@ -74,7 +115,10 @@ def retrieve_semantic_recommendations(
     # Add artificial delay for loading animation
     time.sleep(0.5)
     
-    recs = db_books.similarity_search(query, k=initial_top_k)
+    db = get_db()
+    books = get_books()
+    
+    recs = db.similarity_search(query, k=initial_top_k)
     books_list = [int(rec.page_content.strip('"').split()[0]) for rec in recs]
     book_recs = books[books["isbn13"].isin(books_list)].head(final_top_k)
 
@@ -146,6 +190,7 @@ async def root():
 
 @app.get("/api/categories")
 async def get_categories():
+    books = get_books()
     categories = ["All"] + sorted(books["simple_categories"].unique().tolist())
     return {"categories": categories}
 
@@ -192,7 +237,11 @@ async def get_recommendations(request: RecommendationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Create Gradio interface
-categories = ["All"] + sorted(books["simple_categories"].unique())
+def get_categories_for_ui():
+    books = get_books()
+    return ["All"] + sorted(books["simple_categories"].unique())
+
+categories = get_categories_for_ui()
 tones = ["All"] + ["Happy", "Surprising", "Angry", "Suspenseful", "Sad"]
 
 # Custom CSS for animations and styling
@@ -340,4 +389,6 @@ with gr.Blocks(theme=gr.themes.Glass(), css=custom_css) as dashboard:
 app = gr.mount_gradio_app(app, dashboard, path="/dashboard")
 
 if __name__ == "__main__":
+    # Force garbage collection before starting
+    gc.collect()
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 
