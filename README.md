@@ -2,13 +2,6 @@
 
 A sophisticated book recommendation system that uses semantic search, emotional analysis, and category-based filtering to provide personalized book recommendations.
 
-## Author
-
-[Your Name]
-- LinkedIn: [Your LinkedIn Profile]
-- Email: [Your Email]
-- GitHub: [Your GitHub Profile]
-
 ## Features
 
 - 🔍 Semantic search using modern NLP techniques
@@ -17,12 +10,14 @@ A sophisticated book recommendation system that uses semantic search, emotional 
 - 🖼️ Rich book display with covers and descriptions
 - 🎯 Two-stage recommendation process for better results
 - 💻 Modern web interface using Gradio
+- 🌐 RESTful API for integration with any frontend
 
 ## Project Structure
 
 ```
 .
-├── dashboard.py              # Main application file
+├── dashboard.py              # Gradio web interface
+├── api.py                   # FastAPI service
 ├── data-exploration.ipynb    # Initial data analysis
 ├── text-classification.ipynb # Text classification implementation
 ├── sentiment-analysis.ipynb  # Emotional analysis of book descriptions
@@ -38,6 +33,7 @@ A sophisticated book recommendation system that uses semantic search, emotional 
 
 - Python 3.8+
 - pip (Python package manager)
+- Node.js and npm (for React frontend)
 
 ## Installation
 
@@ -60,47 +56,100 @@ pip install -r requirements.txt
 
 ## Usage
 
-1. Start the application:
+### Running the Gradio Interface
+
 ```bash
 python dashboard.py
 ```
 
-2. Open your web browser and navigate to the URL shown in the terminal (typically http://localhost:7860)
+### Running the API Service
 
-3. Use the interface to:
-   - Enter a book description or theme
-   - Select a category (optional)
-   - Choose an emotional tone (optional)
-   - Click "Find recommendations" to get personalized book suggestions
+```bash
+python api.py
+```
 
-## How It Works
+The API will be available at `http://localhost:8000`
 
-### Recommendation Process
+### API Documentation
 
-1. **Initial Search**:
-   - Takes user query and converts it to semantic embeddings
-   - Performs similarity search to find top 50 matching books
+Once the API is running, visit `http://localhost:8000/docs` for interactive API documentation.
 
-2. **Filtering and Sorting**:
-   - Applies category filter if specified
-   - Sorts by emotional tone if selected
-   - Returns top 16 most relevant results
+#### Available Endpoints
 
-### Technical Components
+1. **GET /** - API Information
+   - Returns basic API information and available endpoints
 
-- **Semantic Search**: Uses HuggingFace's paraphrase-MiniLM-L6-v2 model for text embeddings
-- **Emotional Analysis**: Implements emotion-english-distilroberta-base for sentiment analysis
-- **Vector Storage**: Utilizes Chroma for efficient vector similarity search
-- **Web Interface**: Built with Gradio for a modern, responsive UI
+2. **GET /categories** - Get Categories
+   - Returns list of available book categories
+   - Response: `{"categories": ["All", "Fiction", "Non-Fiction", ...]}`
 
-## Data Processing
+3. **GET /tones** - Get Emotional Tones
+   - Returns list of available emotional tones
+   - Response: `{"tones": ["All", "Happy", "Surprising", "Angry", "Suspenseful", "Sad"]}`
 
-The project includes several Jupyter notebooks for data processing:
+4. **POST /recommend** - Get Book Recommendations
+   - Request Body:
+     ```json
+     {
+       "query": "string",
+       "category": "string (optional)",
+       "tone": "string (optional)",
+       "initial_top_k": "integer (optional)",
+       "final_top_k": "integer (optional)"
+     }
+     ```
+   - Response:
+     ```json
+     {
+       "recommendations": [
+         {
+           "title": "string",
+           "authors": "string",
+           "description": "string",
+           "thumbnail": "string",
+           "category": "string",
+           "emotions": {
+             "joy": "float",
+             "surprise": "float",
+             "anger": "float",
+             "fear": "float",
+             "sadness": "float"
+           }
+         }
+       ]
+     }
+     ```
 
-- `data-exploration.ipynb`: Initial data analysis and cleaning
-- `text-classification.ipynb`: Implementation of text classification
-- `sentiment-analysis.ipynb`: Emotional analysis of book descriptions
-- `vector-search.ipynb`: Vector-based search implementation
+## Deployment
+
+### Backend Deployment Options
+
+1. **Render**
+   - Free tier available
+   - Easy deployment with GitHub integration
+   - Automatic HTTPS
+
+2. **Railway**
+   - Free tier available
+   - Simple deployment process
+   - Good for small to medium applications
+
+3. **Heroku**
+   - Free tier available
+   - Extensive documentation
+   - Easy scaling options
+
+### Frontend Deployment Options
+
+1. **Vercel**
+   - Free tier available
+   - Excellent for React applications
+   - Automatic deployments
+
+2. **Netlify**
+   - Free tier available
+   - Great for static sites
+   - Easy CI/CD integration
 
 ## Contributing
 
@@ -120,12 +169,10 @@ The project includes several Jupyter notebooks for data processing:
 - LangChain for document processing
 - Gradio for the web interface
 - Chroma for vector storage
+- FastAPI for the API framework
 
-## Contact
+## Author
 
-For any questions, suggestions, or collaboration opportunities, please feel free to reach out:
-
-- 📧 Email: [Your Email]
-- 💼 LinkedIn: [Your LinkedIn Profile]
-- 🌐 Website: [Your Website] (optional)
-- 🐦 Twitter: [Your Twitter Handle] (optional) 
+MOHAMMED MURSHID KK
+- 💼 LinkedIn: [https://www.linkedin.com/in/murshidkk/]
+- 🌐 Website: [https://murshidkk.info/]
