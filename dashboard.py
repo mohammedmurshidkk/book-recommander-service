@@ -149,15 +149,9 @@ def recommend_books(query: str, category: str, tone: str):
         else:
             authors_str = row["authors"]
 
-        # Enhanced caption with HTML formatting
-        caption = f"""
-        <div class='book-card'>
-            <h3 style='margin: 0; color: #2c3e50;'>{row['title']}</h3>
-            <p style='color: #7f8c8d; margin: 5px 0;'>by {authors_str}</p>
-            <p style='color: #34495e; font-size: 0.9em;'>{truncated_description}</p>
-        </div>
-        """
-        results.append((row["large_thumbnail"], caption))
+        # Simple text formatting
+        book_info = f"Title: {row['title']}\nAuthor: {authors_str}\nDescription: {truncated_description}"
+        results.append((row["large_thumbnail"], book_info))
 
     return results
 
@@ -208,8 +202,7 @@ with gr.Blocks(theme=gr.themes.Glass(), css=custom_css) as dashboard:
     gr.Markdown("## 📖 Recommended Books")
     output = gr.Gallery(
         label="",
-        columns=4,
-        rows=4,
+        columns=2,
         elem_classes=["animate-slide-up"],
         show_label=False
     )
